@@ -1,24 +1,28 @@
-# Cursor
-  
-TODO: Supply a short overview of the functionality the extension brings to Aha! Develop
-This [Aha! Develop](https://www.aha.io/develop/overview) extension enables...
+# Assign to Cursor
 
-It provides these contributions:
+This is an extension for [Aha! Develop](https://www.aha.io/develop) providing integration with [Cursor cloud agents](https://cursor.com/docs/cloud-agent).
+Assign Features and Requirements to [Cursor](https://cursor.com/) directly from Aha! Develop.
 
-TODO: Add a contribution list here. These should briefly describe each of the features provided by this extension.
 
-## Demo
+## Screen shots
 
-TODO: Add a short .gif screen recording showing some of the highlights of your extension. This can be recorded using a tool like [LICECap](https://www.cockos.com/licecap/).
+<img width="776" alt="image" src="https://github.com/user-attachments/assets/b8cf383e-d01f-44c0-a707-903e89e14174" />
 
-![demo](demo.gif)
+<img width="776" alt="image" src="https://github.com/user-attachments/assets/a4e98cbc-1db0-4db2-835f-f862609d6573" />
+
 
 ## Installing the extension
 
+1. [Configure cloud agents within your Cursor account.](https://cursor.com/dashboard?tab=cloud-agents)   
+
+3. Setup the extension **Account Settings -> Extensions -> Cursor** by specifying your Cursor **API key**, the **Repository URL** and **Base branch**.
+
+4. Add the extension field to your Feature and Requirement screens.
+
 **Note: In order to install an extension into your Aha! Develop account, you must be an account administrator.**
 
-TODO: Fill in a link to your built extension package
-Install the Cursor extension by clicking [here](https://secure.aha.io/settings/account/extensions/install?url=).
+Install the Cursor extension by clicking [here](https://secure.aha.io/settings/account/extensions/install?url=https%3A%2F%2Fsecure.aha.io%2Fextensions%2Faha-develop.assign-cursor.gz
+).
 
 ## Working on the extension
 
@@ -30,9 +34,8 @@ npm install -g aha-cli
 
 Clone the repo:
 
-TODO: Add the repository URL here
 ```sh
-git clone ...
+git clone git@github.com:aha-develop/assign-cursor.git
 ```
 
 **Note: In order to install an extension into your Aha! Develop account, you must be an account administrator.**
