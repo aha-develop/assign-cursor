@@ -1,19 +1,40 @@
+import base64 from "base-64";
 import { RecordType } from "./records";
+
+export interface CursorImage {
+  data: string;
+  dimension: {
+    width: number;
+    height: number;
+  };
+}
 
 export interface CursorAgentPayload {
   prompt: string;
   branchName: string;
+  images?: CursorImage[];
 }
 
 export interface BuildSessionOptions {
   customInstructions?: string;
 }
 
+interface Attachment {
+  id: string;
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  downloadUrl: string;
+}
+
 type FetchedFeature = Aha.Feature & {
   referenceNum: string;
   name: string;
   path: string;
-  description?: { markdownBody?: string };
+  description?: {
+    markdownBody?: string;
+    attachments?: Attachment[];
+  };
   requirements?: Array<{
     referenceNum: string;
     name?: string;
@@ -29,7 +50,10 @@ type FetchedRequirement = Aha.Requirement & {
   referenceNum: string;
   name: string;
   path: string;
-  description?: { markdownBody?: string };
+  description?: {
+    markdownBody?: string;
+    attachments?: Attachment[];
+  };
   feature?: {
     referenceNum: string;
     name?: string;
@@ -41,6 +65,56 @@ type FetchedRequirement = Aha.Requirement & {
   }>;
 };
 
+async function fetchImageAsBase64(url: string): Promise<CursorImage | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(`Failed to fetch image: ${response.status}`);
+      return null;
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const data = base64.encode(
+      new Uint8Array(arrayBuffer).reduce(
+        (data, byte) => data + String.fromCharCode(byte),
+        "",
+      ),
+    );
+
+    // Create an image to get dimensions
+    const blob = new Blob([arrayBuffer]);
+    const imageBitmap = await createImageBitmap(blob);
+    const dimension = {
+      width: imageBitmap.width,
+      height: imageBitmap.height,
+    };
+    imageBitmap.close();
+
+    return { data: data, dimension };
+  } catch (error) {
+    console.warn(`Error fetching image: ${error}`);
+    return null;
+  }
+}
+
+async function fetchAttachmentImages(
+  attachments: Attachment[] | undefined,
+): Promise<CursorImage[]> {
+  if (!attachments?.length) {
+    return [];
+  }
+
+  const imageAttachments = attachments.filter((att) =>
+    att.contentType.startsWith("image/"),
+  );
+
+  const images = await Promise.all(
+    imageAttachments.map((att) => fetchImageAsBase64(att.downloadUrl)),
+  );
+
+  return images.filter((img): img is CursorImage => img !== null);
+}
+
 async function describeFeature(record: RecordType) {
   const feature = (await aha.models.Feature.select(
     "id",
@@ -49,7 +123,14 @@ async function describeFeature(record: RecordType) {
     "path",
   )
     .merge({
-      description: ["markdownBody"],
+      description: aha.models.Note.select("markdownBody").merge({
+        attachments: aha.models.Attachment.select(
+          "fileName",
+          "contentType",
+          "fileSize",
+          "downloadUrl",
+        ),
+      }),
       tasks: aha.models.Task.select("name", "body"),
       requirements: aha.models.Requirement.select("name", "referenceNum"),
     })
@@ -58,6 +139,8 @@ async function describeFeature(record: RecordType) {
   if (!feature) {
     throw new Error("Failed to load feature details");
   }
+
+  const images = await fetchAttachmentImages(feature.description?.attachments);
 
   const requirementsBlock = feature.requirements?.length
     ? `### Requirements\n${feature.requirements
@@ -80,7 +163,12 @@ async function describeFeature(record: RecordType) {
     record.referenceNum
   }](${feature.path})\n`;
 
-  return { context, title: feature.name, referenceNum: feature.referenceNum };
+  return {
+    context,
+    title: feature.name,
+    referenceNum: feature.referenceNum,
+    images,
+  };
 }
 
 async function describeRequirement(record: RecordType) {
@@ -91,10 +179,24 @@ async function describeRequirement(record: RecordType) {
     "path",
   )
     .merge({
-      description: ["markdownBody"],
+      description: aha.models.Note.select("markdownBody").merge({
+        attachments: aha.models.Attachment.select(
+          "fileName",
+          "contentType",
+          "fileSize",
+          "downloadUrl",
+        ),
+      }),
       tasks: aha.models.Task.select("name", "body"),
       feature: aha.models.Feature.select("name", "referenceNum").merge({
-        description: ["markdownBody"],
+        description: aha.models.Note.select("markdownBody").merge({
+          attachments: aha.models.Attachment.select(
+            "fileName",
+            "contentType",
+            "fileSize",
+            "downloadUrl",
+          ),
+        }),
       }),
     })
     .find(record.referenceNum)) as FetchedRequirement | null;
@@ -102,6 +204,11 @@ async function describeRequirement(record: RecordType) {
   if (!requirement) {
     throw new Error("Failed to load requirement details");
   }
+
+  // TOOD concat feature attachments as well
+  const images = await fetchAttachmentImages(
+    requirement.description?.attachments,
+  );
 
   const todosBlock = requirement.tasks?.length
     ? `### Todos\n${requirement.tasks
@@ -122,6 +229,7 @@ async function describeRequirement(record: RecordType) {
     context,
     title: requirement.name,
     referenceNum: requirement.referenceNum,
+    images,
   };
 }
 
@@ -166,10 +274,10 @@ export async function buildSessionPrompt(
 
   return {
     prompt,
-    // todo return images
     branchName: createBranchName({
       title: describe.title,
       referenceNum: describe.referenceNum,
     }),
+    images: describe.images.length > 0 ? describe.images : undefined,
   };
 }

@@ -39,21 +39,39 @@ export type CursorAgentData = z.infer<typeof CursorAgentDataSchema>;
 
 export type CreateAgent = z.infer<typeof CreateAgentSchema>;
 
+type CursorImage = {
+  data: string;
+  dimension: {
+    width: number;
+    height: number;
+  };
+};
+
 async function createAgent({
   prompt,
   repository,
   baseBranch,
   branchName,
   apiKey,
+  images,
 }: {
   prompt: string;
   repository: string;
   baseBranch: string;
   branchName: string;
   apiKey: string;
+  images?: CursorImage[];
 }): Promise<CursorAgentData> {
+  const promptPayload: { text: string; images?: CursorImage[] } = {
+    text: prompt,
+  };
+
+  if (images?.length) {
+    promptPayload.images = images;
+  }
+
   const agentPayload: Record<string, unknown> = {
-    prompt: { text: prompt }, // Todo images
+    prompt: promptPayload,
     source: {
       repository,
       ref: baseBranch,
@@ -122,7 +140,7 @@ registerEventHandler({
   schema: CreateAgentSchema,
   resultSchema: CursorAgentDataSchema,
   handler: async (args, { settings: rawSettings }) => {
-    const { prompt, branchName } = args;
+    const { prompt, branchName, images } = args;
 
     const parsedSettings = ExtensionSettingsSchema.safeParse(rawSettings);
     if (!parsedSettings.success) {
@@ -145,6 +163,7 @@ registerEventHandler({
       baseBranch: baseBranch || "main",
       branchName,
       apiKey,
+      images,
     });
 
     return result;

@@ -49,7 +49,7 @@ const SendToCursorButton: React.FC<SendToCursorButtonProps> = ({
     setMessage("Gathering context...");
 
     try {
-      const { branchName, prompt } = await buildSessionPrompt(record, {
+      const { branchName, prompt, images } = await buildSessionPrompt(record, {
         customInstructions: settings.customInstructions,
       });
 
@@ -58,6 +58,7 @@ const SendToCursorButton: React.FC<SendToCursorButtonProps> = ({
       const session = await createCursorAgent({
         branchName,
         prompt,
+        images,
       });
 
       await record.setExtensionField(EXTENSION_ID, SESSION_FIELD, session);
