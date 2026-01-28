@@ -57,7 +57,10 @@ type FetchedRequirement = Aha.Requirement & {
   feature?: {
     referenceNum: string;
     name?: string;
-    description?: { markdownBody?: string };
+    description?: {
+      markdownBody?: string;
+      attachments?: Attachment[];
+    };
   };
   tasks?: Array<{
     name: string;
@@ -205,10 +208,11 @@ async function describeRequirement(record: RecordType) {
     throw new Error("Failed to load requirement details");
   }
 
-  // TOOD concat feature attachments as well
-  const images = await fetchAttachmentImages(
-    requirement.description?.attachments,
-  );
+  const allAttachments = [
+    ...(requirement.description?.attachments || []),
+    ...(requirement.feature?.description?.attachments || []),
+  ];
+  const images = await fetchAttachmentImages(allAttachments);
 
   const todosBlock = requirement.tasks?.length
     ? `### Todos\n${requirement.tasks
