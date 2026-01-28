@@ -62,12 +62,3 @@ npm install
 ## TypeScript Notes
 
 The .aha-cache types may show many errors - these are from the Aha SDK type definitions and can be ignored. Focus on errors in the `src/` directory only.
-
-## Based On
-
-This extension is adapted from assign-devin-ai. Key differences:
-
-1. Cursor uses Basic Auth instead of Bearer token
-2. Different request structure (`source.repository` vs flat fields)
-3. Response has `id` instead of `session_id`
-4. No tags or playbook support in Cursor API
