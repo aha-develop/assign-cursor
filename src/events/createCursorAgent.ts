@@ -70,6 +70,7 @@ async function createAgent({
     promptPayload.images = images;
   }
 
+  // https://cursor.com/docs/cloud-agent/api/endpoints#launch-an-agent
   const agentPayload: Record<string, unknown> = {
     prompt: promptPayload,
     source: {
@@ -90,10 +91,6 @@ async function createAgent({
     },
     body: JSON.stringify(agentPayload),
   });
-
-  console.log(`DEBUG API Key ${apiKey.substring(0, 4)}...`);
-  console.log(`DEBUG payload ${JSON.stringify(agentPayload)}`);
-  console.log(`DEBUG response ${JSON.stringify(response)}`);
 
   const data = await response.json().catch(() => ({}));
 

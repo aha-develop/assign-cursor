@@ -38,7 +38,7 @@
       },
       "settings": {
         "repository": {
-          "title": "GitHub Repository",
+          "title": "Repository URL",
           "description": "Format: https://github.com/your-org/your-repo. Must be accessible to Cursor Cloud Agent.",
           "type": "string",
           "required": true,

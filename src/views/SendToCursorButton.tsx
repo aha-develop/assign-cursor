@@ -149,7 +149,7 @@ const SendToCursorButton: React.FC<SendToCursorButtonProps> = ({
                   window.open(sessionUrl, "_blank", "noopener noreferrer");
                 }}
               >
-                View Agent
+                View session
                 <i className="fa-regular fa-arrow-up-right" />
               </aha-button>
             }
