@@ -2,7 +2,7 @@ import React from "react";
 
 export const Icon = () => (
   <svg
-    fill="currentColor"
+    fill="var(--aha-color-text)"
     fill-rule="evenodd"
     viewBox="0 0 24 24"
     width="16"
